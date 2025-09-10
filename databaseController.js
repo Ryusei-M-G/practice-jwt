@@ -26,22 +26,48 @@ const register = async (mailaddress, username, password) => {
   }
 };
 
-const findUserByEmail = async (email) => {
+const findEmail = async (email) => {
   try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await pool.query(
+      'SELECT email FROM users WHERE email = $1',
+      [email]
+    );
     return result.rows[0];
   } catch (error) {
     throw error;
   }
 };
 
-const findUserById = async (id) => {
+const findUsername = async (email) => {
   try {
-    const result = await pool.query('SELECT id, email, username FROM users WHERE id = $1', [id]);
-    return result.rows[0];
+    const result = await pool.query(
+      'SELECT username FROM users WHERE email = $1',
+      [email]
+    );
+    return result.rows[0]
   } catch (error) {
     throw error;
   }
 };
 
-export { register, findUserByEmail, findUserById };
+
+const login = async (email, password) => {
+  try {
+    const result = await pool.query(
+      'SELECT password FROM users WHERE email = $1',
+      [email]
+    );
+    
+    if (result.rows.length === 0) {
+      return false; // ユーザーが存在しない
+    }
+    
+    const hashedPassword = result.rows[0].password;
+    const isMatch = await bcrypt.compare(password, hashedPassword);
+    return isMatch;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export { register, findEmail,findUsername, login };

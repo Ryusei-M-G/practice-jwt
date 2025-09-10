@@ -2,7 +2,7 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import { register } from './databaseController.js'
+import { register, findEmail,findUsername, login } from './databaseController.js'
 
 const app = express()
 const port = 3000
@@ -11,33 +11,48 @@ app.use(cookieParser())
 app.use(cors());
 app.use(express.json());
 
-const payload = { userId: 1 }
+
 const JWT_SECRET = 'secret-key'
 const REFRESH_SECRET = 'refresh-secret-key'
 
-const auth = (req, res) => {
-  const accessToken = jwt.sign(
-    payload,
-    JWT_SECRET,
-    { expiresIn: '15m' }
-  );
+const auth = async (req, res) => {
+  const { mailaddress, password } = req.body;
+  try {
+    const email = await findEmail(mailaddress);
+    const user = await findUsername(mailaddress);
+    const auth = await login(mailaddress, password);
+    if(!auth){
+      return res.status(401).json({message:'Invalid credentials'});
+    }
 
-  const refreshToken = jwt.sign(
-    payload,
-    REFRESH_SECRET,
-    { expiresIn: '7d' }
-  );
+    const payload = {username:user.username}
+    const accessToken = jwt.sign(
+      payload,
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
 
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
+    const refreshToken = jwt.sign(
+      payload,
+      REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
 
-  res.json({
-    accessToken,
-    message: 'Tokens generated successfully'
-  });
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false,
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.setHeader('Authorization', `Bearer ${accessToken}`);
+    res.json({
+      message: 'Tokens generated successfully'
+    });
+
+  } catch (err) {
+    throw err;
+  }
+
 }
 
 
@@ -98,7 +113,7 @@ const handleRegister = async (req, res) => {
   }
 }
 //エンドポイント
-app.get('/auth', auth);
+app.post('/login', auth);
 app.get('/profile', verifyToken, profile);
 app.post('/register', handleRegister);
 
