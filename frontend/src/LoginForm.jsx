@@ -1,7 +1,9 @@
 import { useState } from "react"
 import axios from "axios"
+import { useAuth } from "./AuthProvider"
 
 const LoginForm = () => {
+  const { login } = useAuth();
   const [state, setState] = useState({
     email: '',
     password: ''
@@ -23,22 +25,23 @@ const LoginForm = () => {
     }
 
     const content = {
-      mailaddress: state.email, 
+      mailaddress: state.email,
       password: state.password
     }
-    
+
     try {
       const res = await axios.post('http://localhost:3000/login', content);
 
-      const token = res.headers.authorization?.split(' ')[1];
-      console.log('Access Token:', token);
+      const Accesstoken = res.headers.authorization?.split(' ')[1];
       
+      login(Accesstoken);
+
       // stateをリセット
       setState({
         email: '',
         password: ''
       });
-      
+
     } catch (err) {
       console.error('認証エラー', err);
     }
