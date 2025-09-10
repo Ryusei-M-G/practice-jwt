@@ -7,16 +7,18 @@ import { createContext, useContext, useState, useRef } from 'react'
 const AuthContext = createContext();
 
 const AuthProvider = ({children}) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = useRef(false);
   const token = useRef(null);
 
   const login = (accessToken) =>{
+    console.log('called login')
     token.current = accessToken;
-    setIsAuthenticated(true);
+    isAuthenticated.current = true;
+    console.log(isAuthenticated)
   }
   const logout = () =>{
     token.current = '';
-    setIsAuthenticated(false);
+    isAuthenticated.current = false;
   }
 
   const value = {

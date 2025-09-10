@@ -34,7 +34,9 @@ const LoginForm = () => {
 
       const Accesstoken = res.headers.authorization?.split(' ')[1];
       
-      login(Accesstoken);
+      if (Accesstoken) {
+        login(Accesstoken);
+      }
 
       // stateをリセット
       setState({
