@@ -2,7 +2,7 @@
 //トークンが必要なAPIはtokenから参照して使用
 //tokenはレンダリングには関係ないためuseRef()
 
-import { createContext, useContext, useState, useRef } from 'react'
+import { createContext, useContext, useRef } from 'react'
 
 const AuthContext = createContext();
 
@@ -11,10 +11,8 @@ const AuthProvider = ({children}) => {
   const token = useRef(null);
 
   const login = (accessToken) =>{
-    console.log('called login')
     token.current = accessToken;
     isAuthenticated.current = true;
-    console.log(isAuthenticated)
   }
   const logout = () =>{
     token.current = '';

@@ -30,10 +30,13 @@ const LoginForm = () => {
     }
 
     try {
-      const res = await axios.post('http://localhost:3000/login', content);
+      const res = await axios.post('http://localhost:3000/login', content, {
+        withCredentials: true
+      });
+
 
       const Accesstoken = res.headers.authorization?.split(' ')[1];
-      
+
       if (Accesstoken) {
         login(Accesstoken);
       }
@@ -43,7 +46,7 @@ const LoginForm = () => {
         email: '',
         password: ''
       });
-
+      console.log('認証成功:', res.data.message);
     } catch (err) {
       console.error('認証エラー', err);
     }

@@ -8,7 +8,10 @@ const app = express()
 const port = 3000
 
 app.use(cookieParser())
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 app.use(express.json());
 
 
@@ -38,11 +41,16 @@ const auth = async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    console.log('=== ログイン成功 ===');
+    console.log('refreshToken:', refreshToken);
+    
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false,
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
+    
+    console.log('Cookie設定完了');
 
     res.setHeader('Authorization', `Bearer ${accessToken}`);
     res.json({
@@ -60,34 +68,48 @@ const auth = async (req, res) => {
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
   const accessToken = authHeader && authHeader.split(' ')[1];
+  
+  console.log('=== verifyToken ===');
+  console.log('authHeader:', authHeader);
+  console.log('accessToken:', accessToken);
 
   if (accessToken) {
     jwt.verify(accessToken, JWT_SECRET, (err, decoded) => {
       if (err) {
+        console.log('アクセストークン検証失敗:', err.message);
         return handleRefreshToken(req, res, next);
       }
       req.user = decoded;
       next();
     });
   } else {
-    return res.status(401).json({ message: 'Access token required' });
+    console.log('アクセストークンなし、リフレッシュトークンで認証');
+    return handleRefreshToken(req, res, next);
   }
 };
 
 // RefreshToken処理
 const handleRefreshToken = (req, res, next) => {
   const refreshToken = req.cookies.refreshToken;
+  
+  console.log('=== handleRefreshToken ===');
+  console.log('refreshToken:', refreshToken);
+  console.log('All cookies:', req.cookies);
 
   if (!refreshToken) {
+    console.log('リフレッシュトークンなし');
     return res.status(401).json({ message: 'Refresh token required' });
   }
 
   jwt.verify(refreshToken, REFRESH_SECRET, (err, decoded) => {
     if (err) {
+      console.log('リフレッシュトークン検証失敗:', err.message);
       return res.status(403).json({ message: 'Invalid refresh token' });
     }
 
-    const newAccessToken = jwt.sign({ userId: decoded.userId }, JWT_SECRET, { expiresIn: '15m' });
+    console.log('リフレッシュトークン検証成功:', decoded);
+    const newAccessToken = jwt.sign({ username: decoded.username }, JWT_SECRET, { expiresIn: '15m' });
+    console.log('新しいアクセストークン生成:', newAccessToken);
     res.setHeader('Authorization', `Bearer ${newAccessToken}`);
     req.user = decoded;
     next();
@@ -95,11 +117,11 @@ const handleRefreshToken = (req, res, next) => {
 };
 
 const profile = (req, res) => {
-  if (req.user.userId === 1) {
-    res.json({ message: 'user1 secret message' });
-  } else {
-    res.status(403).json({ message: 'Access denied' });
-  }
+  const username = req.user.username;
+  res.json({
+    message: 'Profile accessed successfully',
+    username: username
+  });
 }
 
 const handleRegister = async (req, res) => {

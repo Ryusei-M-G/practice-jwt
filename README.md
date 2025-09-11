@@ -17,3 +17,26 @@
 ### 4. ログアウト
 #### エンドポイント `/logout`
 - トークンを使用不可にします。
+
+## データベース設計
+
+### テーブル関係
+
+**users** ──(1:1)── **profile**
+
+- usersテーブルとprofileテーブルは1対1の関係
+- profile.user_id が users.id を参照する外部キー
+
+### テーブル定義
+
+#### users テーブル
+- `id` (serial4) - Primary Key
+- `email` (varchar(255)) - メールアドレス
+- `username` (varchar(100)) - ユーザー名
+- `password` (varchar(255)) - ハッシュ化されたパスワード
+- `create_at` (timestamp) - 作成日時
+
+#### profile テーブル
+- `user_id` (int4) - Primary Key, Foreign Key (users.id)
+- `text1` (text) - プロフィール情報1
+- `text2` (text) - プロフィール情報2

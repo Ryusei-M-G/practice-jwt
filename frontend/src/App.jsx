@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useState ,useEffect} from "react"
 import axios from 'axios'
+import { useAuth } from "./AuthProvider"
 function App() {
 
   const [isLoading, setIsLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState(null);
+  const { token,login,isAuthenticated} = useAuth();
   const handleAuth = async () => {
     try {
       setIsLoading(true);
@@ -17,19 +18,25 @@ function App() {
     }
   }
 
-  const handleProf = async() =>{
-    if (!accessToken) {
-      alert('先に認証情報を取得してください');
-      return;
-    }
-    
+
+ 
+  const handleProf = async () => {
+    console.log('token:',token.current)
     try {
       setIsLoading(true);
+      
       const res = await axios.get('http://localhost:3000/profile', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+        headers: token.current ? {
+          'Authorization': `Bearer ${token.current}`
+        } : {},
+        withCredentials: true
       });
+      
+      // 新しいアクセストークンがレスポンスヘッダーにある場合は更新
+      const newAccessToken = res.headers.authorization?.split(' ')[1];
+      if (newAccessToken) {
+        login(newAccessToken);
+      }
       console.log(res);
     } catch (error) {
       console.error('認証エラー:', error);
@@ -50,14 +57,14 @@ function App() {
   };
 
   return (
-    <div style={{ 
-      textAlign: 'center', 
+    <div style={{
+      textAlign: 'center',
       padding: '40px',
       maxWidth: '500px',
       margin: '0 auto'
     }}>
       <h1 style={{ marginBottom: '30px' }}>JWT Practice App</h1>
-      
+
       <div style={{ marginBottom: '20px' }}>
         <button onClick={handleAuth} style={buttonStyle}>
           認証情報取得
@@ -68,8 +75,8 @@ function App() {
       </div>
 
       {isLoading && (
-        <div style={{ 
-          color: '#666', 
+        <div style={{
+          color: '#666',
           fontSize: '14px',
           marginTop: '20px'
         }}>
