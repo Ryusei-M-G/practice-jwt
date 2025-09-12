@@ -93,4 +93,21 @@ const getUserInfo = async (id) => {
     throw error;
   }
 }
-export { register, findEmail, findUsername, login, findUserId, getUserInfo};
+
+const updateUserProfile = async(id, text1, text2) => {
+  try {
+    // PostgreSQLのON CONFLICT構文を使用してUPSERT処理
+    const result = await pool.query(
+      `INSERT INTO profile (user_id, text1, text2) 
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id) 
+       DO UPDATE SET text1 = $2, text2 = $3 
+       RETURNING *`,
+      [id, text1, text2]
+    );
+    return result.rows[0];
+  } catch (error) {
+    throw error;
+  }
+}
+export { register, findEmail, findUsername, login, findUserId, getUserInfo,updateUserProfile};

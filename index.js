@@ -2,7 +2,7 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import { register, findEmail,findUsername, login,findUserId, getUserInfo } from './databaseController.js'
+import { register, findEmail, findUsername, login, findUserId, getUserInfo, updateUserProfile } from './databaseController.js'
 
 const app = express()
 const port = 3000
@@ -25,11 +25,11 @@ const auth = async (req, res) => {
     const email = await findEmail(mailaddress);
     const user = await findUsername(mailaddress);
     const auth = await login(mailaddress, password);
-    if(!auth){
-      return res.status(401).json({message:'Invalid credentials'});
+    if (!auth) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const payload = {username:user.username}
+    const payload = { username: user.username }
     const accessToken = jwt.sign(
       payload,
       JWT_SECRET,
@@ -49,7 +49,7 @@ const auth = async (req, res) => {
       secure: false,
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
-    
+
     console.log(`[${new Date().toLocaleString()}] Cookie設定完了`);
 
     res.setHeader('Authorization', `Bearer ${accessToken}`);
@@ -68,7 +68,7 @@ const auth = async (req, res) => {
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
   const accessToken = authHeader && authHeader.split(' ')[1];
-  
+
   console.log(`[${new Date().toLocaleString()}] === verifyToken ===`);
   if (accessToken) {
     jwt.verify(accessToken, JWT_SECRET, (err, decoded) => {
@@ -88,7 +88,7 @@ const verifyToken = (req, res, next) => {
 // RefreshTokenエンドポイント
 const refreshEndpoint = (req, res) => {
   const refreshToken = req.cookies.refreshToken;
-  
+
   console.log(`[${new Date().toLocaleString()}] === refreshEndpoint ===`);
 
   if (!refreshToken) {
@@ -108,14 +108,22 @@ const refreshEndpoint = (req, res) => {
   });
 };
 
-const profile = async(req, res) => {
+const profile = async (req, res) => {
   const username = req.user.username;
   const userId = await findUserId(username);
-  const {text1,text2} = await getUserInfo(userId);
-  res.json({
-    text1: text1,
-    text2: text2,
-  });
+  try {
+    const { text1, text2 } = await getUserInfo(userId);
+    res.json({
+      text1: text1,
+      text2: text2,
+    });
+  } catch (err) {
+    res.status(200).json({
+      text1:'',
+      text2:'',
+    })
+  }
+
 }
 
 const handleRegister = async (req, res) => {
@@ -128,11 +136,26 @@ const handleRegister = async (req, res) => {
     res.status(400).json({ message: 'Registration failed', error: err.message });
   }
 }
+
+const updateProfile = async (req, res) => {
+  const username = req.user.username;
+  const userId = await findUserId(username);
+  console.log(userId);
+  const { text1, text2 } = req.body;
+  try {
+    await updateUserProfile(userId, text1, text2);
+    res.json({ message: 'update successfully' });
+  } catch (err) {
+    res.status(400).json({ message: 'failed', error: err.message });
+  }
+
+}
 //エンドポイント
 app.post('/login', auth);
 app.get('/profile', verifyToken, profile);
 app.post('/register', handleRegister);
 app.get('/refresh', refreshEndpoint);
+app.post('/updateProfile', verifyToken, updateProfile);
 
 app.get('/', (req, res) => {
   res.json({ message: 'hello world' });

@@ -32,7 +32,9 @@ const LoginForm = () => {
     }
 
     try {
-      const res = await axios.post('http://localhost:3000/login', content);
+      const res = await axios.post('http://localhost:3000/login', content,{
+        withCredentials:true//RT取得のためtrue
+      });
       const Accesstoken = res.headers.authorization?.split(' ')[1];
       if (Accesstoken) {
         login(Accesstoken);

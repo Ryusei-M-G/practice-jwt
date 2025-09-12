@@ -7,6 +7,7 @@ const RegisterForm = () => {
     username: '',
     password: ''
   })
+  const [message, setMessage] = useState('')
 
   const changeHandle = (e) => {
     const { name, value } = e.target;
@@ -37,13 +38,15 @@ const RegisterForm = () => {
         username: '',
         password: ''
       });
+      setMessage('登録が完了しました！');
     } catch (err) {
       console.error('登録エラー:', err);
-      alert('登録に失敗しました: ' + (err.response?.data?.message || err.message));
+      setMessage('登録に失敗しました: ' + (err.response?.data?.message || err.message));
     }
   }
   return (
     <div style={{ textAlign: 'center' }}>
+      {message && <div style={{ color: message.includes('完了') ? 'green' : 'red', marginBottom: '10px' }}>{message}</div>}
       <input
         name="email"
         placeholder="email"
