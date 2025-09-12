@@ -2,7 +2,7 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import { register, findEmail,findUsername, login } from './databaseController.js'
+import { register, findEmail,findUsername, login,findUserId, getUserInfo } from './databaseController.js'
 
 const app = express()
 const port = 3000
@@ -98,10 +98,8 @@ const refreshEndpoint = (req, res) => {
 
   jwt.verify(refreshToken, REFRESH_SECRET, (err, decoded) => {
     if (err) {
-      console.log(`[${new Date().toLocaleString()}] リフレッシュトークン検証失敗:`, err.message);
       return res.status(403).json({ message: 'Invalid refresh token' });
     }
-
     console.log(`[${new Date().toLocaleString()}] リフレッシュトークン検証成功:`, decoded);
     const newAccessToken = jwt.sign({ username: decoded.username }, JWT_SECRET, { expiresIn: '15m' });
     console.log(`[${new Date().toLocaleString()}] 新しいアクセストークン生成`);
@@ -110,12 +108,14 @@ const refreshEndpoint = (req, res) => {
   });
 };
 
-const profile = (req, res) => {
+const profile = async(req, res) => {
+  const username = req.user.username;
+  const userId = await findUserId(username);
+  const {text1,text2} = await getUserInfo(userId);
   res.json({
-    text1: 'hoge',
-    text2: 'fuga',
-  }
-  )
+    text1: text1,
+    text2: text2,
+  });
 }
 
 const handleRegister = async (req, res) => {

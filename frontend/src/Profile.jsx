@@ -4,8 +4,8 @@ import axios from "axios"
 
 const Profile = () => {
   const { isAuthenticated, token, login } = useAuth();
-  const [text1,setText1] = useState('');
-  const [text2,setText2] = useState('');
+  const [state1,setState1] = useState('');
+  const [state2,setState2] = useState('');
 
 
   const fetchProfile = async () => {
@@ -15,7 +15,10 @@ const Profile = () => {
           'Authorization': `Bearer ${token.current}`
         }
       });
-      const {test1,text2} = res.body();
+      console.log(res.data)
+      const {text1,text2} = res.data;
+      setState1(text1);
+      setState2(text2);
     } catch (error) {
       if (error.response && error.response.status === 401) {
         try {
@@ -39,8 +42,8 @@ const Profile = () => {
   return (
     <div style={{ textAlign: 'center' }}>
       <button onClick={fetchProfile}>プロフィール情報取得</button>
-      <div>情報1:{text1}</div>
-      <div>情報2:{text2}</div>
+      <div>情報1:{state1}</div>
+      <div>情報2:{state2}</div>
 
     </div>
   );
