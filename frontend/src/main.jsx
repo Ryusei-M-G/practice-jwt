@@ -7,11 +7,13 @@ import RegisterForm from "./RegisterForm";
 import LoginForm from './LoginForm.jsx'
 import Profile from './Profile.jsx'
 import AuthProvider from './AuthProvider.jsx'
+import Navi from './Navi.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>{/*認証状態とトークンを管理 */}
       <BrowserRouter>
+        <Navi />
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/register" element={<RegisterForm />} />

@@ -1,8 +1,10 @@
 import { useState } from "react"
 import axios from "axios"
 import { useAuth } from "./AuthProvider"
+import { useNavigate } from "react-router-dom"
 
 const LoginForm = () => {
+  const navigate = useNavigate();
   const { login } = useAuth();
   const [state, setState] = useState({
     email: '',
@@ -30,13 +32,8 @@ const LoginForm = () => {
     }
 
     try {
-      const res = await axios.post('http://localhost:3000/login', content, {
-        withCredentials: true
-      });
-
-
+      const res = await axios.post('http://localhost:3000/login', content);
       const Accesstoken = res.headers.authorization?.split(' ')[1];
-
       if (Accesstoken) {
         login(Accesstoken);
       }
@@ -47,6 +44,8 @@ const LoginForm = () => {
         password: ''
       });
       console.log('認証成功:', res.data.message);
+      //画面遷移
+      navigate('/profile');
     } catch (err) {
       console.error('認証エラー', err);
     }

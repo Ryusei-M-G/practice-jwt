@@ -2,25 +2,47 @@
 //トークンが必要なAPIはtokenから参照して使用
 //tokenはレンダリングには関係ないためuseRef()
 
-import { createContext, useContext, useRef } from 'react'
+import { createContext, useContext, useRef, useState, useEffect } from 'react'
 
 const AuthContext = createContext();
 
 const AuthProvider = ({children}) => {
-  const isAuthenticated = useRef(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState(null);
   const token = useRef(null);
+
+  // JWTトークンをデコードする関数
+  const decodeJWT = (token) => {
+    try {
+      const base64Payload = token.split('.')[1];
+      const payload = atob(base64Payload);
+      return JSON.parse(payload);
+    } catch (error) {
+      console.error('JWT decode error:', error);
+      return null;
+    }
+  };
 
   const login = (accessToken) =>{
     token.current = accessToken;
-    isAuthenticated.current = true;
+    setIsAuthenticated(true);
+    
+    // トークンからusernameをデコード
+    const payload = decodeJWT(accessToken);
+    if (payload && payload.username) {
+      setUsername(payload.username);
+    }
   }
   const logout = () =>{
     token.current = '';
-    isAuthenticated.current = false;
+    setIsAuthenticated(false);
+    setUsername(null);
+    console.log('ログアウト')
   }
 
   const value = {
     isAuthenticated,
+    username,
     token,
     login,
     logout,
